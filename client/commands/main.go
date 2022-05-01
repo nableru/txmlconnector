@@ -86,16 +86,17 @@ type Boards struct {
 }
 
 type Tick struct {
-	SecId        int     `xml:"secid"`        // идентификатор бумаги
-	TradeNo      int64   `xml:"tradeno"`      // номер сделки
-	TradeTime    string  `xml:"tradetime"`    // время сделки
-	Price        float64 `xml:"price"`        // цена
-	Quantity     int     `xml:"quantity"`     // количество лотов (контрактов)
-	Period       string  `xml:"period"`       // торговый период (O - открытие, N - торги, C - закрытие; передается только для ММВБ)
-	BuySell      string  `xml:"buysell"`      // B - покупка, S - продажа (с точки зрения того, кто инициировал сделку, приняв условия выставленной ранее заявки - передается только когда есть такая информация)
-	OpenInterest int     `xml:"openinterest"` // кол-во открытых позиций на срочном рынке
-	Board        string  `xml:"board"`        // Идентификатор режима торгов по умолчанию
-	SecCode      string  `xml:"seccode"`      // Код инструмента
+	SecId     int     `xml:"secid"`     // идентификатор бумаги
+	TradeNo   int64   `xml:"tradeno"`   // номер сделки
+	TradeTime string  `xml:"tradetime"` // время сделки
+	Price     float64 `xml:"price"`     // цена
+	Quantity  int     `xml:"quantity"`  // количество лотов (контрактов)
+	Period    string  `xml:"period"`    // торговый период (O - открытие, N - торги, C - закрытие; передается только для ММВБ)
+	BuySell   string  `xml:"buysell"`   // B - покупка, S - продажа (с точки зрения того, кто инициировал сделку, приняв условия
+	// выставленной ранее заявки - передается только когда есть такая информация)
+	OpenInterest int    `xml:"openinterest"` // кол-во открытых позиций на срочном рынке
+	Board        string `xml:"board"`        // Идентификатор режима торгов по умолчанию
+	SecCode      string `xml:"seccode"`      // Код инструмента
 }
 
 // Тики
@@ -111,6 +112,7 @@ type Candle struct {
 	High   float64 `xml:"high,attr"`
 	Low    float64 `xml:"low,attr"`
 	Volume int64   `xml:"volume,attr"`
+	OI     int64   `xml:"oi,attr"`
 }
 
 // Свечи
