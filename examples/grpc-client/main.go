@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"strings"
 
 	//"go.oneofone.dev/ta"
 	"io"
 	"os"
 
-	. "github.com/kmlebedev/txmlconnector/client/commands"
-	pb "github.com/kmlebedev/txmlconnector/proto"
+	. "github.com/nableru/txmlconnector/client/commands"
+	pb "github.com/nableru/txmlconnector/proto"
 )
 
 var (

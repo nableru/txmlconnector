@@ -2,7 +2,7 @@ version: '2'
 
 services:
   server:
-    image: kmlebedev/txmlconnector:local
+    image: nableru/txmlconnector:local
     ports:
       - 50051:50051
     command: "server"
@@ -16,7 +16,7 @@ services:
         soft: 262144
         hard: 262144
   exporter:
-    image: kmlebedev/transaq-clickhouse-exporter:local
+    image: nableru/transaq-clickhouse-exporter:local
     environment:
       CLICKHOUSE_URL: "tcp://clickhouse:9000"
       LOG_LEVEL: "DEBUG"

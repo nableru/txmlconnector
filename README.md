@@ -125,3 +125,8 @@ docker-compose -f docker/transaq-clickhouse-exporter-compose.yaml -p transaq up
  - https://iqsignal.net/coint
  - https://www.gonum.org/post/intro_to_gonum/
  
+
+### ToDo ####
+1. подписка на тики по необходимым инструментам
+2. выявление аномальных объемов по минутным свечам
+3. выявление аномальных изменений ОИ по минутным свечам?

@@ -22,7 +22,8 @@ isArgPassed() {
 case "$1" in
 	'server')
 	  shift
-	  exec /usr/bin/wine64 /usr/bin/txmlconnector-server.exe $@
+	  mkdir -p "${HOME}/.wine"
+	   WINEPREFIX="${HOME}/.wine" WINEARCH="win64" exec /usr/bin/wine /usr/bin/txmlconnector-server.exe $@
 	;;
 	'client')
 	  shift

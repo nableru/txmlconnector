@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
-	"github.com/gocolly/colly/v2"
-	log "github.com/sirupsen/logrus"
+
+	// "github.com/360EntSecGroup-Skylar/excelize/v2"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gocolly/colly/v2"
+	log "github.com/sirupsen/logrus"
+	"github.com/xuri/excelize/v2"
 )
 
 // https://www.vtb.ru/akcionery-i-investory/finansovaya-informaciya/raskrytie-finansovyh-rezultatov-po-msfo-na-ezhemesyachnoy-osnove/

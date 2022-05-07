@@ -94,9 +94,9 @@ type Tick struct {
 	Period    string  `xml:"period"`    // торговый период (O - открытие, N - торги, C - закрытие; передается только для ММВБ)
 	BuySell   string  `xml:"buysell"`   // B - покупка, S - продажа (с точки зрения того, кто инициировал сделку, приняв условия
 	// выставленной ранее заявки - передается только когда есть такая информация)
-	OpenInterest int    `xml:"openinterest"` // кол-во открытых позиций на срочном рынке
-	Board        string `xml:"board"`        // Идентификатор режима торгов по умолчанию
-	SecCode      string `xml:"seccode"`      // Код инструмента
+	OI      int    `xml:"openinterest"` // кол-во открытых позиций на срочном рынке
+	Board   string `xml:"board"`        // Идентификатор режима торгов по умолчанию
+	SecCode string `xml:"seccode"`      // Код инструмента
 }
 
 // Тики
@@ -105,6 +105,7 @@ type Ticks struct {
 	Items   []Tick   `xml:"tick"`
 }
 
+// Свечи
 type Candle struct {
 	Date   string  `xml:"date,attr"`
 	Open   float64 `xml:"open,attr"`
@@ -114,8 +115,6 @@ type Candle struct {
 	Volume int64   `xml:"volume,attr"`
 	OI     int64   `xml:"oi,attr"`
 }
-
-// Свечи
 type Candles struct {
 	XMLName xml.Name `xml:"candles"`
 	SecId   int      `xml:"secid,attr"`   // внутренний код
@@ -127,6 +126,36 @@ type Candles struct {
 	// 1 - заказанное количество выдано, если нужны еще данные – можно выполнять еще команду
 	// 2 - продолжение следует, будет еще порция данных по этой команде
 	// 3 - требуемые данные недоступны (есть смысл попробовать запросить позже)
+}
+
+// Сделки
+type Trade struct {
+	SecId      int     `xml:"secid"`
+	TradeNo    int64   `xml:"tradeno"`
+	OrderNo    int64   `xml:"orderno"`
+	Board      string  `xml:"board"`
+	SecCode    string  `xml:"seccode"`
+	Client     string  `xml:"client"`
+	Union      string  `xml:"union"`
+	BuySell    string  `xml:"buysell"`          // B - покупка, S - продажа
+	Time       string  `xml:"time"`             // время сделки
+	BrokerRef  string  `xml:"brokerref"`        // примечание
+	Value      float64 `xml:"value"`            // объем сделки
+	Comission  float64 `xml:"comission"`        // комиссия
+	Price      float64 `xml:"price"`            // цена
+	Items      int64   `xml:"items"`            // кол-во инструмента в сделках в штуках
+	Quantity   int64   `xml:"quantity"`         // количество лотов
+	Yield      float64 `xml:"yield"`            // доходность
+	Accruedint float64 `xml:"accruedint"`       // НКД
+	TradeType  string  `xml:"tradetype"`        // тип сделки: ‘T’ – обычная, ‘N’ – РПС, ‘R’ – РЕПО, ‘P’ – размещение
+	SettleCode string  `xml:"settlecode"`       // код поставки
+	CurrentPos string  `xml:"currentpos"`       // Текущая позиция по инструменту
+	Bypass     int     `xml:"bypass,omitempty"` // Признак внебиржевой сделки, 1 или поле отсутсвует
+	Venue      string  `xml:"venue"`            // Площадка (execution place)
+}
+
+type Trades struct {
+	Items []Trade `xml:"trade"`
 }
 
 type OpMask struct {

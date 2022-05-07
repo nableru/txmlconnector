@@ -18,9 +18,85 @@ import (
 const (
 	EnvKeyLogLevel          = "LOG_LEVEL"
 	ExportCandleCount       = 1000
-	ChCandlesInsertQuery    = "INSERT INTO candles (date, sec_code, period, open, close, high, low, volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+	ChCandlesInsertQuery    = "INSERT INTO candles (date, sec_code, period, open, close, high, low, volume, oi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	ChSecuritiesInsertQuery = "INSERT INTO securities (*) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	ChTicksInsertQuery      = "INSERT INTO ticks (date, sec_code, price, quantity, period, buysell, oi, board) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+	ChTradesInsertQuery     = `INSERT INTO trades (
+								SecId, TradeNo, OrderNo, Board, SecCode, Client, Union, BuySell, Time, BrokerRef, Value, Comission, Price,
+								Items, Quantity, Yield, Accruedint, TradeType, SettleCode, CurrentPos, Bypass, Venue
+							  ) VALUES ( ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ? )`
 )
+
+var sqlSchema = [...]string{
+
+	`candles (
+		date   DateTime,
+		sec_code FixedString(16),
+		period UInt8,
+		open   Float32,
+		close  Float32,
+		high   Float32,
+		low    Float32,
+		volume UInt64,
+		oi     UInt32
+	) ENGINE = ReplacingMergeTree()
+	ORDER BY (date, sec_code, period)`,
+
+	`securities (
+		secid   UInt16,
+		seccode FixedString(16),
+		instrclass String,
+		board String,
+		market UInt8,
+		shortname String,
+		decimals UInt8,
+		minstep Float32,
+		lotsize UInt8,
+		point_cost Float32,
+		sectype String,
+		quotestype UInt8
+	) ENGINE = ReplacingMergeTree()
+	ORDER BY (secid, seccode, board)`,
+
+	`ticks (
+		date   DateTime,
+		secid   UInt16,
+		seccode FixedString(16),
+		price   Float32,
+		quantity UInt64,
+		period UInt8,
+		buysell FixedString(1),
+		oi UInt32,
+		board String
+	) ENGINE = ReplacingMergeTree()
+	ORDER BY (secid, seccode, board)`,
+
+	`trades (
+		SecId      UInt16,
+		TradeNo    UInt64,
+		OrderNo    UInt64,
+		Board      String,
+		SecCode    FixedString(16),
+		Client     String,
+		Union      String,
+		BuySell    FixedString(1),
+		Time       DateTime,
+		BrokerRef  String,
+		Value      UInt64,
+		Comission  Float64,
+		Price      Float32,
+		Items      UInt64,
+		Quantity   UInt64,
+		Yield      Float64,
+		Accruedint Float64,
+		TradeType  FixedString(1),
+		SettleCode String,
+		CurrentPos String,
+		Bypass     UInt8,
+		Venue      String
+	) ENGINE = ReplacingMergeTree()
+	ORDER BY (SecId, SecCode, Board)`,
+}
 
 func main() {
 	var err error
@@ -47,49 +123,26 @@ func main() {
 		}
 		time.Sleep(10 * time.Second)
 	}
-	_, err = connect.Exec(`
-		CREATE TABLE IF NOT EXISTS candles (
-		   date   DateTime,
-		   sec_code FixedString(16),
-		   period UInt8,
-		   open   Float32,
-		   close  Float32,
-		   high   Float32,
-		   low    Float32,
-		   volume UInt64
-		) ENGINE = ReplacingMergeTree()
-		ORDER BY (date, sec_code, period)`)
-	if err != nil {
-		log.Fatal(err)
+	for _, q := range sqlSchema {
+		_, err = connect.Exec("CREATE TABLE IF NOT EXISTS " + q)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	_, err = connect.Exec(`
-		CREATE TABLE IF NOT EXISTS securities (
-			secid   UInt16,
-			seccode FixedString(16),
-			instrclass String,
-			board String,
-			market UInt8,
-			shortname String,
-			decimals UInt8,
-			minstep Float32,
-			lotsize UInt8,
-			point_cost Float32,
-			sectype String,
-			quotestype UInt8
-		) ENGINE = ReplacingMergeTree()
-		ORDER BY (secid, seccode, board)`)
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	tc, err := tcClient.NewTCClient()
 	if err != nil {
 		log.Panic(err)
 	}
 	defer tc.Disconnect()
 	positions := commands.Positions{}
+
 	quotationCandles := make(map[int]commands.Candle)
 	dataCandleCount := ExportCandleCount
 	dataCandleCountLock := sync.RWMutex{}
+
+	dataTradeCountLock := sync.RWMutex{}
+
 	go func() {
 		for {
 			select {
@@ -147,6 +200,47 @@ func main() {
 							candle.High,
 							candle.Low,
 							candle.Volume,
+							candle.OI,
+						); err != nil {
+							log.Error(err)
+						}
+					}
+					if err := tx.Commit(); err != nil {
+						log.Error(err)
+					}
+				case "tics":
+					log.Debugf(fmt.Sprintf("Ticks: %s", resp))
+				case "trades":
+					var tx, _ = connect.Begin()
+					var stmt, _ = tx.Prepare(ChTradesInsertQuery)
+					dataTradeCountLock.Lock()
+					dataCandleCount = len(tc.Data.Trades.Items)
+					dataTradeCountLock.Unlock()
+					for _, trade := range tc.Data.Trades.Items {
+						tradeDate, _ := time.Parse("02.01.2006 15:04:05", trade.Time)
+						if _, err := stmt.Exec(
+							trade.SecId,
+							trade.TradeNo,
+							trade.OrderNo,
+							trade.Board,
+							trade.SecCode,
+							trade.Client,
+							trade.Union,
+							trade.BuySell,
+							fmt.Sprint(tradeDate.Format("2006-01-02 15:04:05")),
+							trade.BrokerRef,
+							trade.Value,
+							trade.Comission,
+							trade.Price,
+							trade.Items,
+							trade.Quantity,
+							trade.Yield,
+							trade.Accruedint,
+							trade.TradeType,
+							trade.SettleCode,
+							trade.CurrentPos,
+							trade.Bypass,
+							trade.Venue,
 						); err != nil {
 							log.Error(err)
 						}
@@ -255,7 +349,8 @@ func main() {
 		if len(exportSecCodes) > 0 {
 			exportSecCodeFound := false
 			for _, exportSecCode := range exportSecCodes {
-				if exportSecCode == sec.SecCode || strings.Contains(sec.SecCode, exportSecCode) || exportSecCode == sec.ShortName || exportSecCode == "ALL" {
+				//				if exportSecCode == sec.SecCode || strings.Contains(sec.SecCode, exportSecCode) || exportSecCode == sec.ShortName || exportSecCode == "ALL" {
+				if exportSecCode == sec.SecCode || exportSecCode == sec.ShortName || exportSecCode == "ALL" {
 					exportSecCodeFound = true
 					break
 				}

@@ -17,7 +17,7 @@ import (
 	"unsafe"
 
 	cmds "github.com/nableru/txmlconnector/client/commands"
-	"github.com/nableru/txmlconnector/proto"
+	transaqConnector "github.com/nableru/txmlconnector/proto"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -25,11 +25,11 @@ import (
 /*
 #include <stdlib.h>
 */
-import "C"
 
 const (
-	txml_dll_name     = "txmlconnector64"
-	txml_dll_ver_main = "6.19.2.21.14"
+	txml_dll_name = "txmlconnector64"
+	// txml_dll_ver_main = "6.19.2.21.14"
+	txml_dll_ver_main = "6.19.2.21.8"
 )
 
 var (
