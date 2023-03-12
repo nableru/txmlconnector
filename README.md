@@ -65,14 +65,14 @@ sudo apt install wine64
 
 ```shell
 export TC_LOG_LEVEL=debug
-export TC_DLL_PATH=txmlconnector64-6.19.2.21.8.dll
+export TC_DLL_PATH=txmlconnector64-6.19.2.21.21.dll
 ```
 
 #### Example output:
 
 ```bash
 make server
-CGO_ENABLED=1 CC="x86_64-w64-mingw32-gcc" GOOS=windows GOARCH=amd64 go build -race -ldflags "-s -w" -o bin/server.exe server/main.go
+CGO_ENABLED=1 CC="x86_64-w64-mingw32-gcc" GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/server.exe server/main.go
 wine64 bin/server.exe
 00ea:fixme:process:SetProcessPriorityBoost (FFFFFFFFFFFFFFFF,1): stub
 time="2020-12-17T20:57:01+05:00" level=info msg="Initialize txmlconnector"
@@ -100,7 +100,7 @@ export TC_LOG_LEVEL="DEBUG"
 #### Example output:
 ```bash
 make client
-go build -race -ldflags "-s -w" -o bin/client client/main.go
+go build -ldflags "-s -w" -o bin/client client/main.go
 bin/client
 INFO[0000] Client running ...                           
 INFO[0001] res <result success="true"/> 
@@ -115,6 +115,7 @@ docker-compose -f docker/transaq-clickhouse-exporter-compose.yaml -p transaq up
 ```
 
 ### Links
+ - [TXmlConnector last(2.21.21) version](https://files.comon.ru/usercontent/TXmlConnector.zip)
  - [TRANSAQ Connector Forum](http://www.transaq.ru/forum/index.php?board=6.0)
  - [TransaqConnector Linux Finam Forum](https://forum.finam.ru/posts/t109457-TransaqConnector-Linux)
  - [TransaqGrpcWrapper](https://github.com/ivanantipin/transaqgrpc)
